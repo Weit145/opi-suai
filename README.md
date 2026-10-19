@@ -1,5 +1,5 @@
 # opi-suai
-ТЕПЕРЬ ВЕРСИЯ 0.1.0 !!
+ТЕПЕРЬ ВЕРСИЯ 0.1.1
 ## Redmine
 
 Запуск: `docker compose up -d`. Интерфейс: http://localhost:8081
