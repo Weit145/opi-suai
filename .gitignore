@@ -1,3 +1,4 @@
 .env
 .vm/
 __pycache__/
+.git-profiles
