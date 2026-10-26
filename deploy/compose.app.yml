@@ -1,0 +1,113 @@
+name: opi34
+x-app-env: &app-env
+  DATABASE_URL: postgres://pcshop:${APP_DB_PASSWORD:?Run make app-init}@db:5432/pcshop?sslmode=disable
+  JWT_SECRET: ${JWT_SECRET:?Run make app-init}
+  INTEGRATION_SECRET: ${INTEGRATION_SECRET:?Run make app-init}
+  DEMO_MODE: 'true'
+  SECURE_COOKIES: 'true'
+  PUBLIC_ORIGIN: https://localhost:8443
+  PROVIDER_URL: http://provider:8091
+  APP_URL: http://backend:8090
+  ADDR: 0.0.0.0:8090
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?Run make app-init}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Run make app-init}
+    volumes:
+      - app_data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/10-app.sh:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  migrate:
+    image: opi34-app:local
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    command: ['app', '-migrate', '-seed']
+    environment:
+      <<: *app-env
+      DEMO_PASSWORD: ${DEMO_PASSWORD:?Run make app-init}
+    depends_on:
+      db:
+        condition: service_healthy
+  backend:
+    image: opi34-app:local
+    restart: unless-stopped
+    environment: *app-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8090/readyz']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+  provider:
+    image: opi34-app:local
+    command: ['provider']
+    restart: unless-stopped
+    environment:
+      <<: *app-env
+      ADDR: 0.0.0.0:8091
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8091/healthz']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  frontend:
+    image: opi34-web:local
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:8443:443'
+      - '127.0.0.1:8083:80'
+    volumes:
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+  backup:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: pcshop
+      PGDATABASE: pcshop
+      PGPASSWORD: ${APP_DB_PASSWORD:?Run make app-init}
+    volumes:
+      - ../.local/backups:/backups
+    depends_on:
+      backend:
+        condition: service_healthy
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        umask 077
+        while true; do
+          target="/backups/pcshop-$$(date -u +%Y%m%dT%H%M%SZ).dump"
+          pg_dump -Fc -f "$$target.tmp"
+          mv "$$target.tmp" "$$target"
+          echo "Backup completed"
+          sleep 86400
+        done
+volumes:
+  app_data:

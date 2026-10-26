@@ -2,3 +2,14 @@
 .vm/
 __pycache__/
 .git-profiles
+
+.env.*
+!.env.example
+!deploy/app.env.example
+web/node_modules/
+web/dist/
+web/*.tsbuildinfo
+.local/
+bin/
+deploy/certs/
+coverage.out
