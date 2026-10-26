@@ -1,0 +1,11 @@
+.git
+.vm
+.env*
+.local
+web/node_modules
+web/dist
+deploy/certs
+themes
+work
+outputs
+bin

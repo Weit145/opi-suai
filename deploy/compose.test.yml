@@ -1,0 +1,19 @@
+name: opi34-test
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: opi_test
+      POSTGRES_USER: opi_test
+      POSTGRES_PASSWORD: ${TEST_DB_PASSWORD:?Use the generated test environment file}
+    ports:
+      - '127.0.0.1:55434:5432'
+    volumes:
+      - test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U opi_test -d opi_test']
+      interval: 2s
+      timeout: 3s
+      retries: 20
+volumes:
+  test_data:
