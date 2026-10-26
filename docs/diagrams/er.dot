@@ -1,0 +1,40 @@
+digraph er {
+  graph [rankdir=LR, fontname="DejaVu Sans", fontsize=13, bgcolor="white", pad=0.2, nodesep=0.3, ranksep=0.55];
+  node [shape=record, style="filled", fillcolor="#f7fbf8", color="#3f5f4f", fontname="DejaVu Sans", fontsize=12, penwidth=1.0];
+  edge [fontname="DejaVu Sans", fontsize=10, color="#4a5a52", arrowsize=0.6];
+
+  users [label="{users|id (PK)\lrole\l}"];
+  refresh_tokens [label="{refresh_tokens|token_hash (PK)\luser_id (FK)\l}"];
+  categories [label="{categories|id (PK)\l}"];
+  products [label="{products|id (PK)\lcategory (FK)\lprice\l}"];
+  stock [label="{stock|product_id (PK,FK)\lavailable\lreserved\l}"];
+  cart_items [label="{cart_items|user_id (PK,FK)\lproduct_id (PK,FK)\lquantity\l}"];
+  configurations [label="{configurations|user_id (PK,FK)\l}"];
+  orders [label="{orders|id (PK)\luser_id (FK)\lstatus\ltotal\lstock_state\l}"];
+  order_items [label="{order_items|order_id (PK,FK)\lproduct_id (PK,FK)\lprice\lquantity\l}"];
+  order_events [label="{order_events|id (PK)\lorder_id (FK)\lstatus\l}"];
+  assembly_tasks [label="{assembly_tasks|order_id (PK,FK)\lstatus\ltest_result\l}"];
+  payments [label="{payments|order_id (PK,FK)\lprovider_id (UQ)\lstatus\l}"];
+  payment_events [label="{payment_events|event_id (PK)\lorder_id (FK)\lkind\l}"];
+  shipments [label="{shipments|order_id (PK,FK)\lprovider_id (UQ)\ltracking\lstatus\l}"];
+  stock_movements [label="{stock_movements|id (PK)\lproduct_id (FK)\lquantity\lkind\l}"];
+  notifications [label="{notifications|id (PK)\luser_id (FK)\lorder_id (FK)\ldelivered\l}"];
+
+  users -> refresh_tokens [label="1 : N"];
+  users -> orders [label="1 : N"];
+  users -> cart_items [label="1 : N"];
+  users -> configurations [label="1 : 1"];
+  users -> notifications [label="1 : N"];
+  categories -> products [label="1 : N"];
+  products -> stock [label="1 : 1"];
+  products -> order_items [label="1 : N"];
+  products -> stock_movements [label="1 : N"];
+  orders -> order_items [label="1 : N"];
+  orders -> order_events [label="1 : N"];
+  orders -> assembly_tasks [label="1 : 1"];
+  orders -> payments [label="1 : 1"];
+  orders -> payment_events [label="1 : N"];
+  orders -> shipments [label="1 : 1"];
+  orders -> stock_movements [label="1 : N"];
+  orders -> notifications [label="1 : N"];
+}

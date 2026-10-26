@@ -13,3 +13,4 @@ web/*.tsbuildinfo
 bin/
 deploy/certs/
 coverage.out
+docs/preview/

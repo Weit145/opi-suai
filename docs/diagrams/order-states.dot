@@ -1,0 +1,36 @@
+digraph states {
+  graph [rankdir=TB, fontname="DejaVu Sans", fontsize=13, bgcolor="white", pad=0.2, nodesep=0.4, ranksep=0.4];
+  node [shape=box, style="rounded,filled", fillcolor="#eef4ef", color="#3f5f4f", fontname="DejaVu Sans", fontsize=13, penwidth=1.0, margin="0.12,0.08"];
+  edge [fontname="DejaVu Sans", fontsize=10.5, color="#4a5a52", arrowsize=0.6];
+
+  awaiting_payment [label="Ожидает оплаты\nawaiting_payment"];
+  paid [label="Оплачен\npaid", fillcolor="#dcebd9"];
+  picking [label="Комплектуется\npicking"];
+  picked [label="Скомплектован\npicked"];
+  assembling [label="В сборке\nassembling"];
+  testing [label="На тестировании\ntesting"];
+  rework [label="Требует доработки\nrework", fillcolor="#f6e6d2"];
+  ready [label="Готов\nready", fillcolor="#dcebd9"];
+  shipping_pending [label="Передача в доставку\nshipping_pending"];
+  shipped [label="Передан в доставку\nshipped"];
+  completed [label="Выполнен\ncompleted", fillcolor="#cfe6c9"];
+  cancelled [label="Отменён\ncancelled", fillcolor="#f2d6d6"];
+  refund_pending [label="Ожидает возврата\nrefund_pending", fillcolor="#f6e6d2"];
+
+  awaiting_payment -> paid [label="payment webhook paid"];
+  paid -> picking [label="pick (warehouse)"];
+  picking -> picked [label="picked (warehouse)"];
+  picking -> ready [label="picked без сборки"];
+  picked -> assembling [label="assemble (assembler)"];
+  assembling -> testing [label="test (assembler)"];
+  testing -> ready [label="pass"];
+  testing -> rework [label="fail + причина"];
+  rework -> assembling [label="assemble"];
+  ready -> shipping_pending [label="shipment (delivery)"];
+  shipping_pending -> shipped [label="provider response"];
+  shipped -> completed [label="delivery sync"];
+  ready -> completed [label="pickup\n(warehouse/manager)"];
+  awaiting_payment -> cancelled [label="cancel", style=dashed];
+  paid -> refund_pending [label="cancel после оплаты", style=dashed];
+  refund_pending -> cancelled [label="refund webhook"];
+}
