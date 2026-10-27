@@ -27,7 +27,7 @@ app-logs:
 test:
 	./deploy/run-tests.sh
 
-.PHONY: vm-up vm-down vm-status vm-ssh vm-logs vm-check
+.PHONY: vm-up vm-down vm-status vm-ssh vm-logs vm-check vm-seed
 
 vm-up:
 	python3 vm/manage.py up
@@ -46,3 +46,10 @@ vm-logs:
 
 vm-check:
 	python3 vm/check.py
+
+# Наполняет уже установленный Redmine проектом pc-assembly-34: участники,
+# роли, трекеры, статусы, workflow и задачи из lab/project.json.
+# Команда идемпотентна: её можно запускать повторно. Пароли участников
+# сохраняются в .vm/team-credentials.json и не попадают в Git.
+vm-seed:
+	python3 vm/seed_redmine.py

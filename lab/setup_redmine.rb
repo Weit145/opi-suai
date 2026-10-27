@@ -1,4 +1,5 @@
 # Run only through Rails runner inside the lab Redmine VM.
+# Usually uploaded and executed by `make vm-seed`; see README.md.
 require 'json'
 require 'securerandom'
 plan = JSON.parse(File.read('/root/opi-project.json'))
@@ -30,7 +31,9 @@ ActiveRecord::Base.transaction do
     roles[role_name] = role
     user = User.find_or_initialize_by(login: login)
     if user.new_record?
-      password = SecureRandom.urlsafe_base64(20)
+      # A copied credentials file lets another PC reuse the existing passwords.
+      restored = credentials.dig(login, 'password')
+      password = restored.to_s.empty? ? SecureRandom.urlsafe_base64(20) : restored
       user.firstname = first
       user.lastname = last
       # Reserved technical addresses for local accounts; these are not the students' real email addresses.
